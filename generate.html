@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <ul>
+        <li><a href="./db.html">DB</a></li>
+        <li><a href="./generate.html">Generate</a></li>
+        <li><a href="./compare.html">Compare</a></li>
+        <li><a href="./timer.html">Timer</a></li>
+        <li><a href="./index.html">Soundbar</a></li>
+      </ul>
+    </div>
+    <div class="t_bt">
+      <div class="top">
+        <button type="button" onclick="screen_heights()" style="margin-bottom: 10px;">높이 조절</button>
+      </div>
+      <div class="bottom">
+        <button type="button" onclick="Q60()">Q60T 변환</button>
+        <button type="button" onclick="T650()">T650 변환</button>
+      </div>
+    </div>
+    <div class="b_cont">
+      <div class="bt_wrap">
+        
+      </div>
+      <div class="in_cont cont">  
+        <div class="cont_wr cont_wr_l">
+          <button type="button" onclick="Clear()">Clear</button>
+        </div>
+        <textarea id="myTextarea" class="text_area"></textarea>
+      </div>
+      <div class="out_cont cont">
+        <div class="cont_wr cont_wr_r">
+          <button type="button" onclick="copy_bt()">복사</button>
+        </div>
+        <textarea id="convTextarea" class="text_area"></textarea>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
+<script>
+  var soft_reset = ['00','7f','02','01']
+  var PEQ = [
+              '58','5c','60','64','68',
+              '6c','70','74','78','7c','00',
+              '08','0c','10','14','18',
+              '1c','20','24','28','2c',
+              '30','34','38','3c','40',
+              '44','48','4c','50','54',
+              '58','5c','60','64','68',
+              '6c','70','74','78','7c','00',
+              '08','0c','10','14','18',
+              '1c','20','24','28','2c',
+              '30','34','38','3c','40',
+              '44','48','4c','50','54'
+            ]
+  var arrays=new Array;
+function Clear(){
+  document.getElementById("myTextarea").value='';
+  document.getElementById("convTextarea").value='';
+}
+function Find_PEQ(array_row){
+  var peq_st
+  var peq_index;
+  var peq_cnt=0;
+    
+    for(var i=0;i<array_row.length;i++,peq_index++){
+      if(array_row[i].substring(5,7)==PEQ[peq_index]){
+        peq_cnt++;
+      }else{
+        peq_index=0
+        peq_cnt=0;
+      }
+      if(peq_cnt == PEQ.length-1){
+        arrays.push(i-62)
+        peq_index=0
+        peq_cnt=0
+      }
+    }
+}
+function Q60() {
+    var flag_10ms;
+    var flag_peq;
+    var word = "";
+    var cnt = 0;
+    var text = document.getElementById("myTextarea").value;
+    var array_row = text.split('\n');
+    var index=0;
+    var test=0;
+    var times_5=0;
+    var row = how_long(array_row);
+    
+    
+    Find_PEQ(array_row)
+    
+    arrays=arrays.reverse()
+    var temp_cnt=0;
+    var peq_i= arrays.pop();
+    console.log(peq_i)
+    for(var i=0;i<row;i++){
+      var array_col= array_row[i].split(' ');
+      var col = how_long(array_col);
+      if(i==peq_i){
+        word += "\nOSTimeDly(1);\n\n"
+      }
+      if(peq_i<i && i<=(peq_i+62)){
+        flag_peq=1
+        temp_cnt++
+        index++
+      }else{
+        flag_peq=0;
+        index=0;
+      }
+
+      if(array_col[0]=='w'&&col>3){
+        var str = "TAS880021A_"+(col-3)+"Byte_Write";
+        
+        switch(parseInt(array_col[1])){
+          case 92:
+            str+="(";
+          break;
+
+          case 96:
+            str+="_2nd(";
+          break;
+
+          case 94:
+            str+="_3third(";
+          break;
+
+          case 90:
+            str+="_4th(";
+          break;
+
+          default:
+
+        }
+        for(var j = 2; j<col-1;j++){
+          str += "0x"+array_col[j].toString(16)+",";
+        }
+        str += "0x"+array_col[col-1].toString(16)+");\n";
+        word+=str;
+        
+        if(flag_peq){
+          if(temp_cnt==62){
+            flag_peq=0
+            // word += "\nOSTimeDly(1);\n\n"
+            console.log(peq_i)
+            peq_i=arrays.pop();
+            temp_cnt=0;
+            index=0;
+          }
+          if(temp_cnt%15==0 && !(array_col[2]=="4c")){
+            console.log(array_col[2])
+            word += "\nOSTimeDly(1);\n\n"
+          }
+        }else{
+          if(cnt==3){
+            if(!flag_10ms){
+              word += "\nOSTimeDly(2);\n\n"
+              flag_10ms=1;
+            }else{
+              if(times_5%4==0){
+                word += "\nOSTimeDly(1);\n\n"
+              }
+              times_5++
+            }
+            cnt=0;
+          }else{
+            cnt++;
+          }
+        }
+      }else{
+        // console.log(array_col);
+      }
+    }
+    console.log(word);
+    document.getElementById("convTextarea").value=word;
+}
+
+function T650() {
+    var flag_10ms;
+    var flag_peq;
+    var word = "";
+    var cnt = 0;
+    var times_5=0;
+    var text = document.getElementById("myTextarea").value;
+    var array_row = text.split('\n');
+    
+    var row = how_long(array_row);
+    
+    Find_PEQ(array_row)
+
+    arrays=arrays.reverse()
+    var temp_cnt=0;
+    var peq_i= arrays.pop();
+    for(var i=0;i<row;i++){
+      var array_col= array_row[i].split(' ');
+      var col = how_long(array_col);
+      
+      if(i==peq_i){
+        word += "\nOSTimeDly(1);\n\n"
+      }
+      if(peq_i<i && i<=(peq_i+62)){
+        flag_peq=1
+        temp_cnt++
+        index++
+      }else{
+        flag_peq=0;
+        index=0;
+      }
+      if(array_col[0]=='w'&&col>3){
+        var str = "TAS880021A_"+(col-3)+"Byte_Write";
+        
+        switch(parseInt(array_col[1])){
+          case 90:
+            str+="(";
+          break;
+
+          case 94:
+            str+="_2nd(";
+          break;
+
+          case 92:
+            str+="_3third(";
+          break;
+
+          default:
+        }
+        for(var j = 2; j<col-1;j++){
+          str += "0x"+array_col[j].toString(16)+",";
+        }
+        str += "0x"+array_col[col-1].toString(16)+");\n";     
+        word+=str;
+        
+        if(flag_peq){
+          if(temp_cnt==62){
+            flag_peq=0
+            // word += "\nOSTimeDly(1);\n\n"
+            console.log(peq_i)
+            peq_i=arrays.pop();
+            temp_cnt=0;
+            index=0;
+          }
+          if(temp_cnt%15==0 && !(array_col[2]=="4c")){
+            console.log(array_col[2])
+            word += "\nOSTimeDly(1);\n\n"
+          }
+        }else{
+          if(cnt==3){
+            if(!flag_10ms){
+              word += "\nOSTimeDly(2);\n\n"
+              flag_10ms=1;
+            }else{
+              if(times_5%4==0){
+                word += "\nOSTimeDly(1);\n\n"
+              }
+              times_5++
+            }
+            cnt=0;
+          }else{
+            cnt++;
+          }
+        }
+      }else{
+        // console.log(array_col);
+      }
+    }
+    console.log(word);
+    document.getElementById("convTextarea").value=word;
+}
+function how_long(arrays){
+return arrays.length;
+}
+
+function copy_bt(){
+        var copyText = document.getElementById("convTextarea");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        alert("Copied the text:\n" + copyText.value);
+}
+
+function screen_heights(){
+  var screen_height = window.innerHeight;
+  var div_height = document.getElementsByClassName("t_bt")[0].offsetHeight;
+  var result=screen_height-div_height-51+"px";
+  // alert(result);
+  var text_areas = document.getElementsByClassName("text_area");
+  // console.log(text_area);
+  if(text_areas){
+    for(var i in text_areas){
+      text_areas[i].style.height=result;
+      console.log(text_areas[i]);
+    }
+  }
+}
+</script>
+
+<style>
+  body{
+    margin:0px;
+  }
+  .wrap{
+    width:100%;
+    position:relative;
+  }
+  .t_bt{
+    width: 100%;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .cont{
+    width:50%;
+    float: left;
+    text-align: center;
+  }
+  .in_cont button{
+    float: right;
+    height: 24px;
+  }
+  .out_cont button{
+    float: left;
+  }
+  .text_area{
+    width:95%;
+    border:1px solid;
+    text-decoration: none;
+  }
+  .cont_wr{
+    width: 97.5%;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .cont_wr_l{
+    float: left;
+  }
+  .cont_wr_r{
+    float: right;
+  }
+
+</style>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <ul>
+        <li><a href="./db.html">DB</a></li>
+        <li><a href="./generate.html">Generate</a></li>
+        <li><a href="./compare.html">Compare</a></li>
+        <li><a href="./timer.html">Timer</a></li>
+        <li><a href="./index.html">Soundbar</a></li>
+    </ul>
+    </div>
+    <div class="t_bt">
+      <div class="top">
+        <div>
+          <div id="stop_watch">
+            <span id="postTestHour">00</span>
+            <span>:</span>
+            <span id="postTestMin">00</span>
+            <span>:</span>
+            <span id="postTestSec">00</span>
+            <span>.</span>
+            <span id="postTestMilisec">00</span>
+          </div>
+        </div>  
+        <h3 id="Time">SpaceBar를 눌려서 시작/종료</h3>
+      </div>
+    </div>
+    <div class="b_cont">
+      <button type="button" onclick="Clear()">Clear</button>
+      <table>
+        <thead>
+          <th>No</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Gap</th>
+        </thead>
+        <tbody id="tbody">
+
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</body>
+</html>
+<script>
+var flag  
+var stTime=[];
+var nowTime=[];
+var timerStart
+var newTime
+var hour
+var min
+var sec
+var milisec
+var index=1;
+document.addEventListener('keypress', function(e) {
+  const keyCode = e.keyCode;
+  console.log('pushed key'+e.keyCode)
+  if(e.keyCode==32) { 
+    if(flag) {
+      if(timerStart) {
+        console.log(stTime)
+        clearInterval(timerStart)
+        document.getElementById("stop_watch").style.color = 'red';
+        var text1 = document.createTextNode(index);
+        var text2 = document.createTextNode(addZero(stTime[1])+":"+addZero(stTime[2])+":"+addZero(stTime[3])+"."+addZero(stTime[4]))
+        var text3 = document.createTextNode(addZero(nowTime[1])+":"+addZero(nowTime[2])+":"+addZero(nowTime[3])+"."+addZero(nowTime[4]))
+        var text4 = document.createTextNode(addZero(hour)+":"+addZero(min)+":"+addZero(sec)+"."+addZero(milisec))
+        var row = document.createElement("tr");
+        
+        var cell1 = document.createElement("td");
+        var cell2 = document.createElement("td");
+        var cell3 = document.createElement("td");
+        var cell4 = document.createElement("td");
+        
+        cell1.appendChild(text1);
+        cell2.appendChild(text2);
+        cell3.appendChild(text3);
+        cell4.appendChild(text4);
+        
+        row.appendChild(cell1);
+        row.appendChild(cell2);
+        row.appendChild(cell3);
+        row.appendChild(cell4);
+
+        document.getElementById("tbody").appendChild(row);
+        index++;
+      }
+      flag=0;
+    }else{
+      document.getElementById("stop_watch").style.color = 'black';
+      stTime[0] = new Date() //클릭한 시점의 현재시간 timestamp를 stTime에 저장
+      stTime[1] = stTime[0].getHours();
+      stTime[2] = stTime[0].getMinutes();
+      stTime[3] = stTime[0].getSeconds();
+      stTime[4] = Math.floor(stTime[0].getMilliseconds()/10);
+      console.log(stTime)
+      timerStart = setInterval(function() {
+        nowTime[0] = new Date() //1ms당 한 번씩 현재시간 timestamp를 불러와 nowTime에 저장
+        nowTime[1] = nowTime[0].getHours();
+        nowTime[2] = nowTime[0].getMinutes();
+        nowTime[3] = nowTime[0].getSeconds();
+        nowTime[4] = Math.floor(nowTime[0].getMilliseconds()/10);
+        newTime = new Date(nowTime[0].getTime() - stTime[0].getTime()) //(nowTime - stTime)을 new Date()에 넣는다
+        hour = stTime[1]-nowTime[1];
+        min = newTime.getMinutes() //분
+        sec = newTime.getSeconds() //초
+        milisec = Math.floor(newTime.getMilliseconds() / 10) //밀리초
+        document.getElementById('postTestHour').innerText = addZero(hour)
+        document.getElementById('postTestMin').innerText = addZero(min)
+        document.getElementById('postTestSec').innerText = addZero(sec)
+        document.getElementById('postTestMilisec').innerText = addZero(milisec)
+      }, 1)
+      flag=1;
+    }
+  }   
+})
+
+
+
+function addZero(num) {
+return (num < 10 ? '0'+num : ''+num)
+}
+
+</script>
+
+<style>
+  body{
+    margin:0px;
+  }
+  .wrap{
+    width:100%;
+    position:relative;
+  }
+  .t_bt{
+    width: 100%;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .cont{
+    width:50%;
+    float: left;
+    text-align: center;
+  }
+  .in_cont button{
+    float: right;
+    height: 24px;
+  }
+  .out_cont button{
+    float: left;
+  }
+  .text_area{
+    width:95%;
+    border:1px solid;
+    text-decoration: none;
+  }
+  
+  .cont_wr{
+    width: 97.5%;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .cont_wr_l{
+    float: left;
+  }
+  .cont_wr_r{
+    float: right;
+  }
+
+  .b_cont{
+    text-align: center;
+  }
+  .b_cont table{
+    margin:30px auto 10px;
+    width:400px;
+  }
+  .b_cont>table>thead{
+    font-size: 26px;
+  }
+  .b_cont>table>tbody{
+    font-size: 18px;
+  }
+  .top span {
+    font-size: 60px;
+    font-weight: 900;
+}
+
+</style>
