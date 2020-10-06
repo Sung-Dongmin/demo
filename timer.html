@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
+<!--Chrome, Safari, IE -->
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<!-- Firefox, Opera  -->
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+ 
 </head>
 <body>
   <div class="wrap">
@@ -108,7 +113,7 @@ document.addEventListener('keydown', function(e) {
         nowTime[3] = nowTime[0].getSeconds();
         nowTime[4] = Math.floor(nowTime[0].getMilliseconds()/10);
         newTime = new Date(nowTime[0].getTime() - stTime[0].getTime()) //(nowTime - stTime)을 new Date()에 넣는다
-        hour = stTime[1]-nowTime[1];
+        hour = nowTime[1]-stTime[1];
         min = newTime.getMinutes() //분
         sec = newTime.getSeconds() //초
         milisec = Math.floor(newTime.getMilliseconds() / 10) //밀리초
